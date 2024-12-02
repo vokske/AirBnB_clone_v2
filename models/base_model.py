@@ -2,10 +2,17 @@
 """Module contains class BaseModel."""
 import uuid
 from datetime import datetime
-
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime
+Base = declarative_base()
 
 class BaseModel:
     """Defines all common attributes/methods for other classes.
+
+    Class attributes:
+        - id: represents a column containing a unique string (60 chars), can't be Null and is a primary key
+        - created_at: represents a column containing a datetime, can't be null.
+        - updated_at: represents a column containing a datetime and can't be null.
 
     Public instance attributes:
         - id
@@ -17,12 +24,17 @@ class BaseModel:
         - to_dict
     """
 
+    id = Column(String(60), primary_key=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
+
+
     def __init__(self, *args, **kwargs):
         """Constructor for class BaseModel."""
         if kwargs:
             for key, value in kwargs.items():
                 if key == 'created_at' or key == 'updated_at':
-                    setattr(self, key, datetime.fromisoformat(value))
+                    setattr(self, key, datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f'))
                 elif key != '__class__':
                     setattr(self, key, value)
             
@@ -36,18 +48,21 @@ class BaseModel:
             self.id = str(uuid.uuid4())
             self.created_at = datetime.now()
             self.updated_at = self.created_at
-            from models import storage
-            storage.new(self)
 
     def __str__(self):
         """Returns a human-readable string representation of an instance."""
-        return f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}"
+        dict_copy = self.__dict__.copy()
+        dict_copy['created_at'] = self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        dict_copy['updated_at'] = self.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        return f"[{self.__class__.__name__}] ({self.id}) {dict_copy}"
 
     def save(self):
         """updates the public instance attribute
         updated_at with the current datetime."""
         from models import storage
+        storage.new(self)
         self.updated_at = datetime.now()
+        storage.new()
         storage.save()
 
     def to_dict(self):
@@ -57,4 +72,10 @@ class BaseModel:
         instance_dict['__class__'] = self.__class__.__name__
         instance_dict['created_at'] = self.created_at.isoformat()
         instance_dict['updated_at'] = self.updated_at.isoformat()
+        if "_sa_instance_state" in instance_dict.keys():
+            del instance_dict["_sa_instance_state"]
         return instance_dict
+    
+    def delete(self):
+        from models import storage
+        storage.delete()

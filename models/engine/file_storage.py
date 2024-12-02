@@ -21,9 +21,15 @@ class FileStorage:
     __file_path = "file.json"
     __objects = {}
 
-    def all(self):
-        """Returns the __objects dictionary."""
-        return self.__objects
+    def all(self, cls=None):
+        """Returns the __objects dictionary if no parameter is passed.
+        Otherwise, it returns a list of objects of the class passed as an
+        argument.
+        """
+        if cls is None:
+            return {key: str(value) for key, value in self.__objects.items()}
+        return [str(value) for key, value in self.__objects.items()
+                if key.split('.')[0] == cls.__name__]
 
     def new(self, obj):
         """Sets in __objects the obj with key <obj class name>.id."""
@@ -77,3 +83,15 @@ class FileStorage:
                 if obj_class:
                     obj = obj_class(**value)
                     self.__objects[key] = obj
+
+    def delete(self, obj=None):
+        """Deletes `obj` from `__objects` if it exists."""
+        if obj == None:
+            return
+        #check that the obj has the required attributes
+        if not hasattr(obj, "__class__") or not hasattr(obj, "id"):
+            raise AttributeError("Object does not have `__class__` and `id` attributes")
+        key = f"{obj.__class__.__name__}.{obj.id}"
+        if key in self.__objects.keys():
+            del self.__objects[key]
+            self.save()
