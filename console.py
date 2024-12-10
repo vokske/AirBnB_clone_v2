@@ -2,6 +2,7 @@
 """Contains the class for a simple interpreter."""
 import cmd
 import ast
+import shlex
 from models.base_model import BaseModel
 from models import storage
 from models.user import User
@@ -39,7 +40,7 @@ class HBNBCommand(cmd.Cmd):
             if not line:
                 print("** class name is missing **")
                 return
-            args = line.split()
+            args = shlex.split(line)
             class_name = args[0]
             attributes = args[1:]
             if class_name not in storage.classes():
@@ -50,11 +51,16 @@ class HBNBCommand(cmd.Cmd):
                 if "=" in attr:
                     key, value = attr.split('=', 1)
                     if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1].replace("_", " ")
+                        value = value.strip('"').replace("_", " ")
+                    elif "_" in value:
+                        value = value.replace("_", " ")
                     elif value.isdigit():
                         value = int(value)
-                    elif value.replace('.', '', 1).isdigit():
-                        value = float(value)
+                    elif "." in value:
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            pass
                     kwargs[key] = value
             
             obj = storage.classes()[class_name](**kwargs)
@@ -72,9 +78,9 @@ class HBNBCommand(cmd.Cmd):
         if not line:
             print("** class name missing **")
             return
-        args = line.split(' ')
+        args = line.split()
 
-        if len(args) == 1:
+        if len(args) < 2:
             print("** instance id missing **")
             return
         else:
@@ -86,10 +92,13 @@ class HBNBCommand(cmd.Cmd):
             else:
                 key = f"{class_name}.{instance_id}"
                 instance = storage.all().get(key)
+                
                 if instance is None:
                     print("** no instance found **")
-                    return
-                print(instance)
+                else:
+                    #if hasattr(instance, 'to_dict'):
+                    #    print(instance.to_dict())
+                    print(instance)
 
     def do_destroy(self, line):
         """Deletes an instance based on the class name
@@ -117,21 +126,40 @@ class HBNBCommand(cmd.Cmd):
                 if not instance:
                     print("** no instance found **")
                     return
-                else:
-                    del storage.all()[key]
-                    storage.save()
+                # Delete instance based on storage type
+                try:
+                    if storage.__class__.__name__ == "DBStorage":
+                        # For DBStorage, delete using SQLAlchemy session
+                        storage.delete(instance)
+                        storage.save()
+                    else:
+                        # For FileStorage, delete from the dictionary 
+                        del storage.all()[key]
+                        storage.save()
+                    print("Instance deleted successfully.")
+                except Exception as e:
+                    print(f"An error occurred during deletion: {e}")
 
     def do_all(self, line):
         """Prints all string representation of all
         instances based or not on the class name.
         """
-        if not line:
-            instances = [str(value) for key, value in storage.all().items()]
-        elif line not in storage.classes():
-            print("** class doesn't exist **")
-        else:
-            instances = [str(value) for key, value in storage.all().items() if key.startswith(f"{line}.")]
-        print(instances)
+        try:
+            object_strings = []
+            if line:
+                if line not in storage.classes():
+                    print("** class doesn't exist **")
+                    return
+                objs = storage.all(line)
+            else:
+                # Fetch all objects
+                objs = storage.all()
+            for obj in objs.values():
+                object_strings.append(obj.to_dict())
+            print(object_strings)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
 
     def do_update(self, line):
         """Updates an instance based on the class name and id by adding
@@ -139,6 +167,7 @@ class HBNBCommand(cmd.Cmd):
         """
         if not line:
             print("** class name missing **")
+            return
 
         else:
             args = line.split(" ")
@@ -146,33 +175,55 @@ class HBNBCommand(cmd.Cmd):
 
             if class_name not in storage.classes():
                 print("** class doesn't exist **")
+                return
 
             elif len(args) < 2:
                 print("** instance id missing **")
+                return
 
             elif len(args) < 3:
                 print("** attribute name missing **")
+                return
 
             elif len(args) < 4:
                 print("** value missing **")
+                return
 
             else:
                 instance_id = args[1]
                 attr_name = args[2]
-                attr_value = args[3]
+                attr_value = " ".join(args[3:])
 
-                if type(attr_name) == int:
+                if attr_value.startswith('"') and attr_value.endswith('"'):
+                    attr_value = attr_value[1:-1] # Remove the quotes
+                elif "_" in attr_value:
+                    attr_value = attr_value.replace("_", " ")
+
+                try:
+                    if attr_value.isdigit():
+                        attr_value = int(attr_value)
+                    elif "." in attr_value:
+                        attr_value = float(attr_value)
+                    else:
+                        attr_value = str(attr_value)
+                except ValueError:
+                    pass
+
+                """if type(attr_name) == int:
                     attr_value = int(args[3].strip('"'))
                 elif type(attr_name) == float:
                     attr_value = float(args[3].strip('"'))
                 elif type(attr_name) == str:
-                    attr_value = str(args[3].strip('"'))
-
+                    if "_" in attr_value:
+                        attr_value.replace("_", " ")
+                        attr_value = str(args[3].strip('"'))
+                   """ 
                 key = f"{class_name}.{instance_id}"
                 instance = storage.all().get(key)
 
                 if not instance:
                     print("** no instance found **")
+                    return
 
                 else:
                     setattr(instance, attr_name, attr_value)
