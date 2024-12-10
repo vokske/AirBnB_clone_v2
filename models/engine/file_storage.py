@@ -27,9 +27,13 @@ class FileStorage:
         argument.
         """
         if cls is None:
-            return {key: str(value) for key, value in self.__objects.items()}
-        return [str(value) for key, value in self.__objects.items()
-                if key.split('.')[0] == cls.__name__]
+            return self.__objects
+        if isinstance(cls, str):
+            cls = self.classes().get(cls)
+        if cls is None:
+            return{}
+        return {key: value for key, value in self.__objects.items()
+                if isinstance(value, cls)}
 
     def new(self, obj):
         """Sets in __objects the obj with key <obj class name>.id."""
@@ -37,10 +41,12 @@ class FileStorage:
         self.__objects[key] = obj
 
     def save(self):
-        """Serializes __objects to a JSON file."""
+        """Serializes objects to a JSON file."""
         json_dict = {}
         for key, obj in self.__objects.items():
-            json_dict[key] = obj.to_dict()
+            obj_dict = obj.to_dict()
+            obj_dict.pop('_sa_instance_state', None)
+            json_dict[key] = obj_dict
 
         directory = os.path.dirname(self.__file_path)
         if directory:
@@ -50,7 +56,7 @@ class FileStorage:
             json.dump(json_dict, f)
 
     def classes(self):
-        """Return a dictionary of classes and their references."""
+        """Return a dictionary mapping class names to their class objects. It serves to reconstruct objects during reload."""
         from models.base_model import BaseModel
         from models.user import User
         from models.state import State
@@ -75,22 +81,17 @@ class FileStorage:
             with open(self.__file_path, 'r') as f:
                 json_dict = json.load(f)
 
-            valid_classes = self.classes()
-
-            for key, value in json_dict.items():
-                class_name, obj_id = key.split('.')
-                obj_class = valid_classes.get(class_name)
-                if obj_class:
-                    obj = obj_class(**value)
-                    self.__objects[key] = obj
+                valid_classes = self.classes()
+                for key, value in json_dict.items():
+                    class_name, obj_id = key.split('.')
+                    obj_class = valid_classes.get(class_name)
+                    if obj_class:
+                        self.__objects[key] = obj_class(**value)
 
     def delete(self, obj=None):
         """Deletes `obj` from `__objects` if it exists."""
         if obj == None:
             return
-        #check that the obj has the required attributes
-        if not hasattr(obj, "__class__") or not hasattr(obj, "id"):
-            raise AttributeError("Object does not have `__class__` and `id` attributes")
         key = f"{obj.__class__.__name__}.{obj.id}"
         if key in self.__objects.keys():
             del self.__objects[key]
