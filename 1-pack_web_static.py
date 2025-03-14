@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Generates a .tgz archive from the contents of a folder
+""" Generates a .tgz archive from the contents of a specific folder."""
 
 from fabric.api import task
 from datetime import datetime
@@ -8,7 +8,6 @@ import tarfile
 
 @task
 def do_pack():
-    """Generates a .tgz archive from the contents of a specific directory."""
     try:
         # Create versions folder if it doesn't exist
         if not os.path.exists('versions'):
