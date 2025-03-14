@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 # Generates a .tgz archive from the contents of a folder
 
 from fabric.api import task
