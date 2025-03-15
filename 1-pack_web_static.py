@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-from fabric.api import task
+from fabric import task
 from datetime import datetime
 import os
 import tarfile
 
 @task
-def do_pack():
+def do_pack(c):
     """A function that generates a .tgz archive from the contents of a specific folder."""
     try:
         # Create versions folder if it doesn't exist
