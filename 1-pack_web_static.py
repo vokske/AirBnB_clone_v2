@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 """
-This script is meant to generate a .gtz archive from the contents of the web_static folder from the Airbnb clone repo, using a function do_pack.
+Script generates a .gtz archive from the contents of the web_static folder.
 
-The script imports the task function from Fabric, the datetime module from datetime, os module, and the tarfile module.
+It does this using a function do_pack.
 """
 from fabric.api import task
 from datetime import datetime
@@ -11,7 +11,8 @@ import tarfile
 
 def do_pack():
     """
-    A function that generates a .tgz archive from the contents of a specific folder.
+    A function that generates a .tgz archive from the contents of a folder.
+
     Returns:
         archive_name if process is successful, None otherwise.
 
@@ -22,7 +23,8 @@ def do_pack():
             os.makedirs('versions')
 
         # Generate archive name using the timestamp
-        archive_name = f'versions/web_static_{datetime.now().strftime("%Y%m%d%H%M%S")}.tgz'
+        archive_name = f'versions/web_static_{datetime.now().strftime(
+        "%Y%m%d%H%M%S")}.tgz'
 
         # Create a .tgz archive using tarfile
 
