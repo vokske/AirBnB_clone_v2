@@ -15,7 +15,6 @@ def do_pack():
 
     Returns:
         archive_name if process is successful, None otherwise.
-
     """
     try:
         # Create versions folder if it doesn't exist
