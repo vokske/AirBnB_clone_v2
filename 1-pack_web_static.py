@@ -4,21 +4,25 @@ This script is meant to generate a .gtz archive from the contents of the web_sta
 
 The script imports the task function from Fabric, the datetime module from datetime, os module, and the tarfile module.
 """
-from fabric import task
+from fabric.api import task
 from datetime import datetime
 import os
 import tarfile
 
-@task
-def do_pack(c):
-    """A function that generates a .tgz archive from the contents of a specific folder """
+def do_pack():
+    """
+    A function that generates a .tgz archive from the contents of a specific folder.
+    Returns:
+        archive_name if process is successful, None otherwise.
+
+    """
     try:
         # Create versions folder if it doesn't exist
         if not os.path.exists('versions'):
             os.makedirs('versions')
 
         # Generate archive name using the timestamp
-        archive_name = f"versions/web_static_{datetime.now().strftime("%Y%m%d%H%M%S")}.tgz"
+        archive_name = f'versions/web_static_{datetime.now().strftime("%Y%m%d%H%M%S")}.tgz'
 
         # Create a .tgz archive using tarfile
 
