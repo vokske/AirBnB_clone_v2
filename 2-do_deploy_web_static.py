@@ -11,9 +11,10 @@ env.hosts = ['18.208.106.131', '54.235.229.175']
 env.user = 'ubuntu'
 env.key_filename = '~/.ssh/sandbox'
 
+
 def do_pack():
     """
-    A function that generates a .tgz archive from the contents of a specific folder
+    Function generates a .tgz archive from the contents of a specific folder
     
     Returns:
         archive_path if steps are successful, None otherwise.
@@ -24,7 +25,7 @@ def do_pack():
             os.makedirs('versions')
 
         # Generate archive name using the timestamp
-        archive_name = f"versions/web_static_{datetime.now().strftime("%Y%m%d%H%M%S")}.tgz"
+        archive_name = f"versions/web_static_{datetime.now().strftime('%Y%m%d%H%M%S')}.tgz"
 
         # Create a .tgz archive using tarfile
 
