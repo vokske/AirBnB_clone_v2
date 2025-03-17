@@ -22,7 +22,10 @@ def do_pack():
             os.makedirs('versions')
 
         # Generate archive name using the timestamp
-        archive_name = f'versions/web_static_{datetime.now().strftime("%Y%m%d%H%M%S")}.tgz'
+        archive_name = (
+                f'versions/web_static_'
+                f'{datetime.now().strftime("%Y%m%d%H%M%S")}.tgz'
+        )
 
         # Create a .tgz archive using tarfile
 
