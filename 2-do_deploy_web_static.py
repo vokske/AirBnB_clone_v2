@@ -80,8 +80,6 @@ def do_deploy(archive_path):
 
         # Create a new symbolic link to the new release
         run(f'ln -s {release_folder} /data/web_static/current')
-
-        print("New version deployed!")
         return True
     except Exception:
         return False
