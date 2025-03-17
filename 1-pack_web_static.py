@@ -9,6 +9,7 @@ from datetime import datetime
 import os
 import tarfile
 
+
 def do_pack():
     """
     A function that generates a .tgz archive from the contents of a folder.
