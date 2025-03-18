@@ -136,7 +136,7 @@ def do_clean(number=0):
         for archive in remote_archives[:-number]:
             run(f'rm -rf /data/web_static/releases/{archive}')
         return True
-    exception Exception:
+    except Exception:
         return False
 
 
