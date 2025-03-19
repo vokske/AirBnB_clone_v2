@@ -4,7 +4,7 @@ This script is meant to generate a .gtz archive from the contents of the web_sta
 
 The script imports the task function from Fabric, the datetime module from datetime, os module, and the tarfile module.
 """
-from fabric.api import env, put, run
+from fabric.api import env, put, run, local
 from datetime import datetime
 import os
 import tarfile
@@ -36,8 +36,13 @@ def do_clean(number=0):
         if number == 0:
             number = 1
 
-        # Clean up archives in the versions folder on local
-        local_archives = sorted(os.listdir('versions'))
+        # Get list of archives sorted by modification time (most recent first)
+        local_archives = sorted(
+            os.listdir('versions'),
+            key=lambda f: os.path.getmtime(os.path.join('versions', f))
+        )
+
+        # Delete all archives except the most recent `number` of archives
         for archive in local_archives[:-number]:
             local(f'rm -rf versions/{archive}')
 
